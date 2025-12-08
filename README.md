@@ -22,7 +22,7 @@ For now you can
 
 > set up current
 >```bash
->kubectl apply -f ./search-engine-manifest.k8s.yml 
+>kubectl apply -f .
 >```
 
 > View pods
@@ -32,5 +32,5 @@ For now you can
 
 > Remove 
 >```bash
->kubectl delete -f ./search-engine-manifest.k8s.yml 
+>kubectl delete -f .
 >```
