@@ -22,7 +22,7 @@ For now you can
 
 > set up current
 >```bash
->kubectl apply -f ./k8s
+>kubectl apply -f ./k8s/
 >```
 
 > View pods
@@ -32,5 +32,5 @@ For now you can
 
 > Remove 
 >```bash
->kubectl delete -f ./k8s
+>kubectl delete -f ./k8s/
 >```
