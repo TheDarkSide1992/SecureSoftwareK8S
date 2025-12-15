@@ -4,7 +4,7 @@ metadata:
   labels:
     app: review-handler
   name: review-handler
-  namespace: default
+  namespace: gamebase
 spec:
   progressDeadlineSeconds: 600
   replicas: 3
