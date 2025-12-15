@@ -42,12 +42,10 @@ For now you can run these commands in this order
 
 > View all resources for default and database namespaces(remove the -o wide flag for less details)
 >```bash
-> kubectl get all -n default -o wide
-> kubectl get all -n database -o wide
+> kubectl get all -n default -o wide && kubectl get all -n database -o wide
 >```
 
 > Remove (deleting a namespace will also remove all resources within it)
 >```bash
->kubectl delete -f ./k8s/
->kubectl delete namespace database
+> kubectl delete -f ./k8s/ && kubectl delete namespace database
 >```
