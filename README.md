@@ -18,19 +18,36 @@ This Project is a fork of an older project named GameBAse(https://github.com/emi
 ## Run
 This section will be updated as the project goes on.
 
-For now you can 
+For now you can run these commands in this order
 
-> set up current
+> create k8s namespaces
+>```bash
+>kubectl apply -f ./k8s-namespace/
+>```
+
+> create database secrets
+>```bash
+>kubectl create secret generic postgres-secret -n database   --from-literal=POSTGRES_DB='GameBaseDb'   --from-literal=username='postgres'   --from-literal=password='Your$ecureP@ssw0rd!'
+>```
+
+> create k8s pods
 >```bash
 >kubectl apply -f ./k8s/
 >```
 
-> View pods
+> View pods for default and database namespaces
 >```bash
-> kubectl get all
+> kubectl get pods -n default -n database
 >```
 
-> Remove 
+> View all resources for default and database namespaces(remove the -o wide flag for less details)
+>```bash
+> kubectl get all -n default -o wide
+> kubectl get all -n database -o wide
+>```
+
+> Remove (deleting a namespace will also remove all resources within it)
 >```bash
 >kubectl delete -f ./k8s/
+>kubectl delete namespace database
 >```
