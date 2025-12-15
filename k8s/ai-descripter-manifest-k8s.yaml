@@ -4,7 +4,7 @@ metadata:
   labels:
     app: ai-descriptor
   name: ai-descriptor
-  namespace: default
+  namespace: gamebase
 spec:
   progressDeadlineSeconds: 600
   replicas: 2

@@ -4,7 +4,7 @@ metadata:
   labels:
     app: gateway
   name: gateway
-  namespace: default
+  namespace: gamebase
 spec:
   progressDeadlineSeconds: 600
   replicas: 4

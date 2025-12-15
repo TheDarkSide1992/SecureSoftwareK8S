@@ -4,7 +4,7 @@ metadata:
   labels:
     app: search-engine
   name: search-engine
-  namespace: default
+  namespace: gamebase
 spec:
   progressDeadlineSeconds: 600
   replicas: 3
@@ -23,7 +23,7 @@ spec:
         app: search-engine
     spec:
       containers:
-        - image: dghcr.io/emil476m/gamebase-se:0.0.37
+        - image: ghcr.io/emil476m/gamebase-se:0.0.37
           imagePullPolicy: IfNotPresent
           name: gamebase-se
           resources: {}

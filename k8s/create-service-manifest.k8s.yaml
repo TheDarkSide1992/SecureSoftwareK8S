@@ -4,7 +4,7 @@ metadata:
   labels:
     app: create-service
   name: create-service
-  namespace: default
+  namespace: gamebase
 spec:
   progressDeadlineSeconds: 600
   replicas: 2
