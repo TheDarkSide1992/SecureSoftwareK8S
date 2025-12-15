@@ -1,17 +1,3 @@
-# Create this Secret before applying:
-#powershell command under this
-
-# kubectl create secret generic postgres-secret -n database `
-#  --from-literal=POSTGRES_DB="GameBaseDb" `
-#  --from-literal=username="postgres" `
-#  --from-literal=password="Your$ecureP@ssw0rd!"
-
-#bash command under this 
-# kubectl create secret generic postgres-secret -n database \
-#  --from-literal=POSTGRES_DB='GameBaseDb' \
-#  --from-literal=username='postgres' \
-#  --from-literal=password='Your$ecureP@ssw0rd!'
-
 apiVersion: v1
 kind: Service
 metadata:
