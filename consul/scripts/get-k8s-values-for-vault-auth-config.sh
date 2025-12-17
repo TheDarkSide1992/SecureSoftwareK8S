@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Configurable variables
-NAMESPACE="consul"
+NAMESPACE="default"
 SA_NAME="vault-auth"
 JSON_FILE="consul/vault-k8s-auth.json"
 TOKEN_TTL="720h"
