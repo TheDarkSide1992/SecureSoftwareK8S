@@ -16,6 +16,10 @@ set up a cluster with either kind or minikube
 > minikube start --driver=docker --profile=gamebase
 > ```
 
+>[!NOTE]
+> If you do not have helm installed you can find it here
+> https://github.com/helm/helm/releases/tag/v4.0.4
+
 ## Get helm repository
 
 > Get Hashicorp helm repository
@@ -58,7 +62,7 @@ With the pods running in the vault name space
 
 > [!NOTE]
 > 
-> In the fallowing command for unsealing the unseal_keys_b64 value from the json file in /consul/cluster-keys.json
+> In the fallowing command for unsealing the vault in pod vault-0 unseal_keys_b64 value from the json file in /consul/cluster-keys.json
 
 > Unseal vault in pod vault-0
 > 
@@ -74,7 +78,7 @@ With the pods running in the vault name space
 
 > [!NOTE]
 > 
-> In the fallowing command for unsealing the unseal_keys_b64 value from the json file in /consul/cluster-keys.json
+> In the fallowing command for unsealing the vault in pod vault-1 unseal_keys_b64 value from the json file in /consul/cluster-keys.json
 
 > Unseal vault-1
 > 
@@ -84,7 +88,7 @@ With the pods running in the vault name space
 
 > [!NOTE]
 > 
-> In the fallowing command for unsealing the unseal_keys_b64 value from the json file in /consul/cluster-keys.json
+> In the fallowing command for unsealing the vault in pod vault-2 unseal_keys_b64 value from the json file in /consul/cluster-keys.json
 
 > Unseal vault-2
 > 
