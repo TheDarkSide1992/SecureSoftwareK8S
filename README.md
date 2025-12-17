@@ -18,11 +18,15 @@ It is now being used for Testing and managing a kubernetes cluster in regards to
 
 This Project is a fork of an older project named GameBAse(<https://github.com/emil476m/GameBase>), it is not meant to expand upon this project in terms of features or other ux enhancement. Instead the goal is to use it as an existing code base to make a k8s(kubernetes) cluster around, with a focus on security.
 
+
+
 ## Run
 
 This section will be updated as the project goes on.
 
 For now you can run these commands in this order
+
+Please set up consul first here is a guid for it: [Guid](Consul-set-up.md)
 
 > create k8s namespaces
 >
