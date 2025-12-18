@@ -1,0 +1,63 @@
+global:
+  enabled: true
+  name: consul
+  image: hashicorp/consul:1.22.1
+  datacenter: dc1
+  secretsBackend:
+    vault:
+      vaultNamespace: "vault"
+      enabled: true
+      consulServerRole: consul-server
+      consulClientRole: consul-client
+      consulCARole: consul-ca
+      
+      manageSystemACLsRole: consul-acl-manager
+  tls:
+    enabled: false
+    enableAutoEncrypt: true
+    caCert:
+      secretName: "pki/cert/ca"
+  acls:
+    manageSystemACLs: true
+    bootstrapToken:
+      secretName: "secret/data/consul-bootstrap-token"
+      secretKey: "token"
+  metrics:
+    enabled: true
+    enableAgentMetrics: true
+    agentMetricsRetentionTime: "1m"
+
+server:
+  enabled: true
+  replicas: 1
+  serviceAccount:
+    create: true
+    name: consul-server
+
+  serverCert:
+    secretName: "pki/issue/consul-server"
+  extraVolumes:
+    - type: "secret"
+      name: vault-ca
+      load: "false"
+
+ui:
+  enabled: true
+  service:
+    type: NodePort
+  metrics:
+    enabled: true
+    provider: "prometheus"
+    baseURL: http://prometheus-server.default.svc.cluster.local
+
+connectInject:
+  enabled: true
+  default: true
+  metrics:
+    defaultEnabled: true
+  apiGateway:
+    enabled: true
+    image: "hashicorp/consul-api-gateway:0.5.1"
+    managedGatewayClass:
+      serviceType: NodePort
+      useHostPorts: true
