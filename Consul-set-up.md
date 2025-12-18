@@ -2,13 +2,7 @@
 
 ## Set up cluster
 
-set up a cluster with either kind or minikube
-
-> Create cluster with kind
-> 
-> ```bash
-> kind create cluster --name gamebase
-> ```
+set up a cluster with minikube
 
 > Create cluster with minikube
 > 
@@ -249,6 +243,7 @@ With the pods running in the vault name space
 > [!NOTE]
 > 
 > replace with the token you created before Save the token in kv
+> its also recommended to save tge token somewhere you can find it
 > 
 > run in the vault
 > ```bash
