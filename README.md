@@ -28,7 +28,27 @@ For now you can run these commands in this order
 
 Please set up consul first here is a guid for it: [Guid](Consul-set-up.md)
 
-> create k8s namespaces
+>start by creating a file named database-security-config.k8s.yaml in the k8s-security-management folder with the following content:
+> ```yaml
+> apiVersion: apiserver.config.k8s.io/v1
+> kind: EncryptionConfiguration
+> resources:
+>  - resources:
+>     - secrets
+>    providers:
+>      - secretbox:
+>        keys:
+>          - name: key1
+>            secret: <your secret-base64-encoded-key-here>
+>      - identity: {}
+> ```
+
+> in the file k8s-security-management/database-security-config.k8s.yaml replace <your secret-base64-encoded-key-here> with your own key
+> you can use this command to generate a base64 encoded 32 byte key
+>
+>```bash
+>head -c 32 /dev/urandom | base64
+>```
 
 > This is some steps to enable encryption at rest for secrets in minikube(k8s). first start by making sure minikue is running
 >
@@ -36,17 +56,12 @@ Please set up consul first here is a guid for it: [Guid](Consul-set-up.md)
 >minikube start
 >```
 
-> in the file k8s-security-management/database-security-config.k8s.yaml replace <your secret-base64-encoded-key-here> with your own key
-> you can use tihs command to generate a base64 encoded 32 byte key
->
->```bash
->head -c 32 /dev/urandom | base64
->```
+
 
 > First we need to copy our apiserver manifest and ancryption config to minikube
 >
 >```bash
->minikube cp k8s-security-management/encryption-config.yaml minikube:/tmp/encryption-config.yaml && \
+>minikube cp k8s-security-management/database-security-config.k8s.yaml minikube:/tmp/encryption-config.yaml && \
 >minikube cp k8s-security-management/kube-apiserver.yaml minikube:/tmp/kube-apiserver.yaml
 >```
 
@@ -81,7 +96,7 @@ Please set up consul first here is a guid for it: [Guid](Consul-set-up.md)
 >```
 > After you exit minikube ssh you can restart minikube with
 > ```bash
->minikube stop && minikube start
+> minikube stop && minikube start
 > ```
 
 > First please confirm your current kubernetes context(since some security features wont work in docker desktop k8s)
