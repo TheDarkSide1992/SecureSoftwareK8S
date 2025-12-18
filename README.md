@@ -135,8 +135,12 @@ Please set up consul first here is a guid for it: [Guid](Consul-set-up.md)
 > If you want to confirm encryption at rest is working for secrets you can use the following command and search for GameBaseDb then you will see the value for key1 is encrypted
 >
 >```bash
-> minikube ssh && vi /var/lib/minikube/etcd/member/snap/db
+> minikube ssh
 >```
+>then use
+> ```bash
+> sudo vi /var/lib/minikube/etcd/member/snap/db
+> ```
 
 > Remove (deleting a namespace will also remove all resources within it)
 >
