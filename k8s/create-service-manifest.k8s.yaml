@@ -5,6 +5,8 @@ metadata:
     app: create-service
   name: create-service
   namespace: gamebase
+  annotations:
+    consul.hashicorp.com/connect-inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 2
@@ -22,6 +24,7 @@ spec:
       labels:
         app: create-service
     spec:
+      serviceAccountName: descriptor   # must match the Service name
       containers:
         - image: ghcr.io/emil476m/gamebase-cs:0.0.37
           imagePullPolicy: IfNotPresent

@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: postgres
   namespace: database
+  annotations:
+    consul.hashicorp.com/connect-inject: "true"
 spec:
   clusterIP: None
   selector:
@@ -30,6 +32,7 @@ spec:
       labels:
         app: postgres
     spec:
+      serviceAccountName: postgres   # must match the Service name
       containers:
         - name: postgres
           image: postgres:16
@@ -59,6 +62,11 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: password
+            - name: CONSUL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: consul-token
+                  key: token
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data

@@ -5,6 +5,8 @@ metadata:
     app: review-handler
   name: review-handler
   namespace: gamebase
+  annotations:
+    consul.hashicorp.com/connect-inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 3
@@ -22,6 +24,7 @@ spec:
       labels:
         app: review-handler
     spec:
+      serviceAccountName: descriptor   # must match the Service name
       containers:
         - image: ghcr.io/emil476m/gamebase-rh:0.0.37
           imagePullPolicy: IfNotPresent

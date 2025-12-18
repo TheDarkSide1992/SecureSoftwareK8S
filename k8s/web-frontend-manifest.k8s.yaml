@@ -5,6 +5,8 @@ metadata:
     app: web-frontend
   name: web-frontend
   namespace: gamebase
+  annotations:
+    consul.hashicorp.com/connect-inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 4
@@ -22,6 +24,7 @@ spec:
       labels:
         app: web-frontend
     spec:
+      serviceAccountName: descriptor   # must match the Service name
       containers:
         - image: ghcr.io/emil476m/gamebase-web:0.0.37
           imagePullPolicy: IfNotPresent
