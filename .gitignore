@@ -83,3 +83,7 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # End of https://www.toptal.com/developers/gitignore/api/rider
+vault-k8s-auth.json
+cluster-keys.json
+note.txt
+/consul/vault-ca.crt
