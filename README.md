@@ -67,6 +67,16 @@ Please set up consul first here is a guid for it: [Guid](Consul-set-up.md)
 >sudo chmod 600 /etc/kubernetes/encryption-config.yaml
 >```
 
+> While minikube should restart the apiserver automatically once it detects changes to its manifest you can also just exit and restart minikube to be sure
+>
+>```bash
+>exit 
+>```
+> After you exit minikube ssh you can restart minikube with
+> ```bash
+>minikube stop && minikube start
+> ```
+
 > First please confirm your current kubernetes context(since some security features wont work in docker desktop k8s)
 >
 >```bash
