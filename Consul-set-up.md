@@ -33,6 +33,7 @@ set up a cluster with either kind or minikube
 > Sets up a service account in the default namespace and creates a cluster role binding for the service account
 > 
 > ```bash
+> chmod +x ./consul/scripts/get-k8s-values-for-vault-auth-config.sh &&
 > ./consul/scripts/get-k8s-values-for-vault-auth-config.sh
 > ```
 
@@ -41,7 +42,7 @@ After getting the output of the bash script in the previous command there should
 > Creates vault namespace and the pods for vault
 > 
 > ```bash
-> helm install vault hashicorp/vault --create-namespace --namespace vault --values /consul/helm-values/helm-vault-raft-values.yml
+> helm install vault hashicorp/vault --create-namespace --namespace vault --values ./consul/helm-values/helm-vault-raft-values.yml
 > ```
 
 Now there should have some pods in the vault namespace
@@ -57,8 +58,8 @@ With the pods running in the vault name space
 > Creates a json file with tokens required for accessing the vault
 > 
 > ```bash
-> kubectl exec -n vault vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > /consul/cluster-keys.json
-> ```
+> kubectl exec -i -n vault vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json 2>/dev/null | tee ./consul/cluster-keys.json > /dev/null
+>```
 
 > [!NOTE]
 > 
@@ -67,7 +68,7 @@ With the pods running in the vault name space
 > Unseal vault in pod vault-0
 > 
 > ```bash
-> kubectl exec -n vault vault-0 -- vault operator unseal 
+> kubectl exec -n vault vault-0 -- vault operator unseal <inset unseal_keys_b64 key>
 > ```
 
 > Makes pods vault-1 and vault-2 join the vault-0 pod
@@ -83,7 +84,7 @@ With the pods running in the vault name space
 > Unseal vault-1
 > 
 > ```bash
-> kubectl exec -n vault -ti vault-1 -- vault operator unseal 
+> kubectl exec -n vault -ti vault-1 -- vault operator unseal <inset unseal_keys_b64 key>
 > ```
 
 > [!NOTE]
@@ -93,7 +94,7 @@ With the pods running in the vault name space
 > Unseal vault-2
 > 
 > ```bash
-> kubectl exec -n vault -ti vault-2 -- vault operator unseal 
+> kubectl exec -n vault -ti vault-2 -- vault operator unseal <inset unseal_keys_b64 key>
 > ```
 
 ## Copy files to pod vault-0
@@ -105,31 +106,42 @@ With the pods running in the vault name space
 > Copy files to pod vault-0
 > 
 > ```bash
-> kubectl cp -n vault /consul/policies/consul-server-policy.hcl vault-0:/tmp/consul-server-policy.hcl
-> kubectl cp -n vault /consul/policies/ca-policy.hcl vault-0:/tmp/ca-policy.hcl
-> kubectl cp -n vault /consul/policies/consul-acl-manager.hcl vault-0:/tmp/consul-acl-manager-policy.hcl
-> kubectl cp -n vault /consul/vault-k8s-auth.json vault-0:/tmp/vault-k8s-auth.json
-> kubectl cp -n vault /consul/policies/consul-bootstrap-token-policy.hcl vault-0:/tmp/consul-bootstrap-token-policy.hcl
+> kubectl cp -n vault ./consul/policies/consul-server-policy.hcl vault-0:/tmp/consul-server-policy.hcl
+> kubectl cp -n vault ./consul/policies/ca-policy.hcl vault-0:/tmp/ca-policy.hcl
+> kubectl cp -n vault ./consul/policies/consul-acl-manager-policy.hcl vault-0:/tmp/consul-acl-manager-policy.hcl
+> kubectl cp -n vault ./consul/vault-k8s-auth.json vault-0:/tmp/vault-k8s-auth.json
+> kubectl cp -n vault ./consul/policies/consul-bootstrap-token-policy.hcl vault-0:/tmp/consul-bootstrap-token-policy.hcl
 > ```
 
 ## Set up inside the vault-0 pod
 
+> login to vault
+> ```bash
+>  kubectl exec -it vault-0 -n vault -- /bin/sh
+>```
+> type 
+> ```bash
+> vault login
+> ```
+> then insert the root token from cluster-keys.json
+> afterward enable vaults.
+
 > Enable pki in vault-0
 > 
 > ```bash
-> kubectl exec -n vault vault-0 -- vault secrets enable pki
+> vault secrets enable pki
 > ```
 
 > Tune max ttl for pki
 > 
 > ```bash
-> kubectl exec -n vault vault-0 -- vault secrets tune -max-lease-ttl=87600h pki
+> vault secrets tune -max-lease-ttl=87600h pki
 > ```
 
 > Enable kv-v2
 > 
 > ```bash
-> kubectl exec -n vault vault-0 -- vault secrets enable -path=secret kv-v2
+> vault secrets enable -path=secret kv-v2
 > ```
 
 > [!NOTE]
@@ -148,17 +160,18 @@ With the pods running in the vault name space
 > 
 > common_name format: common_name="datacenter-name.namespace with consul"
 > 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault write -field=certificate pki/root/generate/internal common_name="dc1.consul" ttl=87600h
+> vault write -field=certificate pki/root/generate/internal common_name="dc1.consul" ttl=87600h
 > ```
 
 > Create policies
-> 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault policy write consul-server /tmp/consul-server-policy.hcl
-> kubectl exec -n vault vault-0 -- vault policy write ca-policy /tmp/ca-policy.hcl
-> kubectl exec -n vault vault-0 -- vault policy write consul-acl-manager /tmp/consul-acl-manager-policy.hcl
-> kubectl exec -n vault vault-0 -- vault policy write consul-bootstrap /tmp/consul-bootstrap-token-policy.hcl
+> vault policy write consul-server /tmp/consul-server-policy.hcl
+> vault policy write ca-policy /tmp/ca-policy.hcl
+> vault policy write consul-acl-manager /tmp/consul-acl-manager-policy.hcl
+> vault policy write consul-bootstrap /tmp/consul-bootstrap-token-policy.hcl
 > ```
 
 > [!NOTE]
@@ -167,15 +180,17 @@ With the pods running in the vault name space
 > 
 > Create pki role
 > 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault write pki/roles/consul-server allowed_domains="dc1.consul, consul-server, consul-server.consul, consul-server.consul.svc" allow_subdomains=true allow_bare_domains=true allow_localhost=true max_ttl="87600h"
+> vault write pki/roles/consul-server allowed_domains="dc1.consul, consul-server, consul-server.consul, consul-server.consul.svc" allow_subdomains=true allow_bare_domains=true allow_localhost=true max_ttl="87600h"
 > ```
 
 > Enable kubernetes auth and set the config
 > 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault auth enable kubernetes
-> kubectl exec -n vault vault-0 -- vault write auth/kubernetes/config @/tmp/vault-k8s-auth.json
+> vault auth enable kubernetes
+> vault write auth/kubernetes/config @/tmp/vault-k8s-auth.json
 > ```
 
 > [!NOTE]
@@ -184,8 +199,9 @@ With the pods running in the vault name space
 > 
 > Create consul-server kubernetes auth role
 > 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault write auth/kubernetes/role/consul-server bound_service_account_names=consul-auth-method,consul-connect-injector,consul-gateway-cleanup,consul-gateway-resources,consul-server,consul-server-acl-init,consul-server-acl-init-cleanup,consul-webhook-cert-manager,default bound_service_account_namespaces=consul audience="https://kubernetes.default.svc.cluster.local" policies=consul-server,consul-bootstrap ttl="720h"
+> vault write auth/kubernetes/role/consul-server bound_service_account_names=consul-auth-method,consul-connect-injector,consul-gateway-cleanup,consul-gateway-resources,consul-server,consul-server-acl-init,consul-server-acl-init-cleanup,consul-webhook-cert-manager,default bound_service_account_namespaces=consul audience="https://kubernetes.default.svc.cluster.local" policies=consul-server,consul-bootstrap ttl="720h"
 > ```
 
 > [!NOTE]
@@ -194,8 +210,9 @@ With the pods running in the vault name space
 > 
 > Create consul-client kubernetes auth role
 > 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault write auth/kubernetes/role/consul-client bound_service_account_names=consul-auth-method,consul-connect-injector,consul-gateway-cleanup,consul-gateway-resources,consul-server,consul-server-acl-init,consul-server-acl-init-cleanup,consul-webhook-cert-manager,default bound_service_account_namespaces=consul audience="https://kubernetes.default.svc.cluster.local" policies=consul-server ttl="720h"
+> vault write auth/kubernetes/role/consul-client bound_service_account_names=consul-auth-method,consul-connect-injector,consul-gateway-cleanup,consul-gateway-resources,consul-server,consul-server-acl-init,consul-server-acl-init-cleanup,consul-webhook-cert-manager,default bound_service_account_namespaces=consul audience="https://kubernetes.default.svc.cluster.local" policies=consul-server ttl="720h"
 > ```
 
 > [!NOTE]
@@ -204,8 +221,9 @@ With the pods running in the vault name space
 > 
 > Create consul-ca kubernetes auth role
 > 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault write auth/kubernetes/role/consul-ca bound_service_account_names=consul-auth-method,consul-connect-injector,consul-gateway-cleanup,consul-gateway-resources,consul-server,consul-server-acl-init,consul-server-acl-init-cleanup,consul-webhook-cert-manager,default bound_service_account_namespaces=consul audience="https://kubernetes.default.svc.cluster.local" policies=ca-policy ttl="720h"
+> vault write auth/kubernetes/role/consul-ca bound_service_account_names=consul-auth-method,consul-connect-injector,consul-gateway-cleanup,consul-gateway-resources,consul-server,consul-server-acl-init,consul-server-acl-init-cleanup,consul-webhook-cert-manager,default bound_service_account_namespaces=consul audience="https://kubernetes.default.svc.cluster.local" policies=ca-policy ttl="720h"
 > ```
 
 > [!NOTE]
@@ -214,24 +232,27 @@ With the pods running in the vault name space
 > 
 > Create consul-acl-manager kubernetes auth role
 > 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault write auth/kubernetes/role/consul-acl-manager bound_service_account_names=consul-auth-method,consul-connect-injector,consul-gateway-cleanup,consul-gateway-resources,consul-server,consul-server-acl-init,consul-server-acl-init-cleanup,consul-webhook-cert-manager,default bound_service_account_namespaces=consul audience="https://kubernetes.default.svc.cluster.local" policies=consul-acl-manager,consul-bootstrap ttl="720h"
+> vault write auth/kubernetes/role/consul-acl-manager bound_service_account_names=consul-auth-method,consul-connect-injector,consul-gateway-cleanup,consul-gateway-resources,consul-server,consul-server-acl-init,consul-server-acl-init-cleanup,consul-webhook-cert-manager,default bound_service_account_namespaces=consul audience="https://kubernetes.default.svc.cluster.local" policies=consul-acl-manager,consul-bootstrap ttl="720h"
 > ```
 
 > [!NOTE]
 > 
 > Please remember to save the output Create a token
 > 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault token create -policy="consul-bootstrap" -ttl=720h -orphan -display-name="consul-bootstrap"
+> vault token create -policy="consul-bootstrap" -ttl=720h -orphan -display-name="consul-bootstrap"
 > ```
 
 > [!NOTE]
 > 
 > replace with the token you created before Save the token in kv
 > 
+> run in the vault
 > ```bash
-> kubectl exec -n vault vault-0 -- vault kv put secret/consul-bootstrap-token token="<bootstrap-token-value>"
+> vault kv put secret/consul-bootstrap-token token="<bootstrap-token-value>"
 > ```
 
 ## Consul namespace set up
@@ -239,7 +260,7 @@ With the pods running in the vault name space
 > extract vault-ca
 > 
 > ```bash
-> kubectl exec -n vault vault-0 -- vault read -field=certificate pki/cert/ca > /consul/vault_ca.crt
+> kubectl exec -n vault vault-0 -- vault read -field=certificate pki/cert/ca | tee ./consul/vault-ca.crt
 > ```
 
 > Create consul namespace
@@ -255,13 +276,13 @@ With the pods running in the vault name space
 > Set up vault-ca secret
 > 
 > ```bash
-> kubectl create secret generic vault-ca -n consul --from-file vault.ca=/consul/vault_ca.crt
+> kubectl create secret generic vault-ca -n consul --from-file vault.ca=./consul/vault_ca.crt
 > ```
 
 > Set up consul pods
 > 
 > ```bash
-> helm install --values consul-datacenter-values.yaml consul hashicorp/consul --namespace consul --version "1.9.0"
+> helm install --values ./consul/helm-values/consul-datacenter-values.yaml consul hashicorp/consul --namespace consul --version "1.9.0"
 > ```
 
 ## Access the consul ui
@@ -275,3 +296,6 @@ With the pods running in the vault name space
 > ```bash
 > kubectl port-forward -n consul consul-server-0 8500:8500
 > ```
+
+you can find the ui at
+> http://localhost:8500/ui/dc1/services
