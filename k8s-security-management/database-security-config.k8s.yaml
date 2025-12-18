@@ -4,8 +4,8 @@ resources:
   - resources:
       - secrets
     providers:
-      - aescbc:
+      - secretbox:
           keys:
             - name: key1
-              secret: cNPDiJNVLvJ6Hq6r1qhoA5kJsBFnTAFjFhQiE4GLXTI=
+              secret: <your secret-base64-encoded-key-here>
       - identity: {}

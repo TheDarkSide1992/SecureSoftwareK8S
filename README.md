@@ -36,6 +36,13 @@ Please set up consul first here is a guid for it: [Guid](Consul-set-up.md)
 >minikube start
 >```
 
+> in the file k8s-security-management/database-security-config.k8s.yaml replace <your secret-base64-encoded-key-here> with your own key
+> you can use tihs command to generate a base64 encoded 32 byte key
+>
+>```bash
+>head -c 32 /dev/urandom | base64
+>```
+
 > First we need to copy our apiserver manifest and ancryption config to minikube
 >
 >```bash
