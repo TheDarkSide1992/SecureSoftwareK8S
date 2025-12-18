@@ -37,6 +37,12 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 >kubectl apply -f ./k8s-namespace/
 >```
 
+>[!Note]
+> 
+> now that you have created the namespaces
+> please go follow this guide on setting up acl in consul 
+>  [Guide](Consul-acl-setup.md)
+
 > Create database secrets
 >
 >```bash
