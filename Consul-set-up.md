@@ -7,7 +7,7 @@ set up a cluster with minikube
 > Create cluster with minikube
 > 
 > ```bash
-> minikube start --driver=docker --profile=gamebase
+> minikube start --driver=docker
 > ```
 
 >[!NOTE]
