@@ -8,9 +8,9 @@
 >     - secrets
 >    providers:
 >      - secretbox:
->        keys:
->          - name: key1
->            secret: <your secret-base64-encoded-key-here>
+>          keys:
+>            - name: key1
+>              secret: <your secret-base64-encoded-key-here>
 >      - identity: {}
 > ```
 
