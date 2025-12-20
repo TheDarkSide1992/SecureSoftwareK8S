@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-kms
+  namespace: kms
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-kms-rewrapper-binding
+subjects:
+  - kind: ServiceAccount
+    name: vault-kms
+    namespace: kms
+roleRef:
+  kind: ClusterRole
+  name: vault-kms-rewrapper
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kms-vault-reviewer-binding
+subjects:
+  - kind: ServiceAccount
+    name: vault-kms
+    namespace: kms
+roleRef:
+  kind: ClusterRole
+  name: system:auth-delegator
+  apiGroup: rbac.authorization.k8s.io
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vault-kubernetes-kms
+  namespace: kms
+  labels:
+    component: vault-kms-plugin
+    tier: control-plane
+  annotations:
+    consul.hashicorp.com/connect-inject: "false"
+spec:
+  initContainers:
+    - name: setup-socket-dir
+      image: busybox
+      command: [ "sh", "-c", "chown -R 1000:2000 /vault-kms && chmod 775 /vault-kms" ]
+      volumeMounts:
+        - name: kms-socket
+          mountPath: "/vault-kms"
+      securityContext:
+        runAsUser: 0
+  
+  priorityClassName: system-cluster-critical
+  serviceAccountName: vault-kms
+  hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 2000
+  containers:
+    - name: vault-kms-provider
+      image: ruddickmg/vault-kms-provider:latest
+      env:
+        - name: VAULT_ADDRESS
+          value: "http://vault-kms.kms.svc.cluster.local:8200"
+        - name: VAULT_AUTH_METHOD
+          value: "kubernetes"
+        - name: VAULT_KUBERNETES_ROLE
+          value: "vault-kms"
+        - name: VAULT_TRANSIT_KEY
+          value: "k8s-kek"
+        - name: SOCKET_PATH
+          value: "/var/kms/kms.sock"
+        - name: VAULT_TRANSIT_MOUNT
+          value: "transit"
+        - name: SOCKET_PERMISSIONS
+          value: "666"
+        - name: VAULT_KUBERNETES_JWT_PATH
+          value: "/var/run/secrets/vault/token"
+      volumeMounts:
+        - name: sa-token
+          mountPath: "/var/run/secrets/vault"
+          readOnly: true
+        - mountPath: "/var/kms"
+          name: kms-socket
+          readOnly: false
+
+
+    - name: kms-rewrapper
+      image: kms-rewrapper:local
+      imagePullPolicy: Never
+
+
+  volumes:
+    - name: kms-socket
+      hostPath:
+        path: /var/kms
+        type: DirectoryOrCreate
+    - name: sa-token
+      projected:
+        sources:
+        - serviceAccountToken:
+            path: token
+            expirationSeconds: 3600
+            audience: https://kubernetes.default.svc.cluster.local
