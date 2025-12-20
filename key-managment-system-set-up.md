@@ -21,7 +21,7 @@
 
 > SSH into the minicube instance
 > 
-> >```bash
+> ```bash
 > minikube ssh
 >```
 
