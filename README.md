@@ -73,12 +73,18 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 >kubectl get pods --all-namespaces -o wide
 >```
 
+
+>
 > If you want to confirm encryption at rest is working for secrets you can use the following command and search for GameBaseDb then you will see the value for key1 is encrypted
 >
 >```bash
 > minikube ssh
 >```
-> then use(please dont try and be smart about it and use cat, its a big file and will spam your terminal)
+
+> [!WARNING]
+> Please be aware that its a big file, so its not recommended to use a cmd editor that reads the whole file at once like cat, since it will spam your terminal
+>
+> use this command to open the etcd db file in vi editor(vi dosnt show the whole file at once so its better for this usecase)
 > ```bash
 > sudo vi /var/lib/minikube/etcd/member/snap/db
 > ```
