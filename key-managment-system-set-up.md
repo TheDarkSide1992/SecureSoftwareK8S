@@ -29,7 +29,7 @@
 > Make kms directory in minikube
 > 
 > ```bash
-> sudo mkdir -p /var/kms/ && sudo chmod 777 /var/kms"
+> sudo mkdir -p /var/kms/ && sudo chmod 777 /var/kms
 > ```
 
 > Exit minikube
