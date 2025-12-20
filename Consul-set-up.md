@@ -294,27 +294,3 @@ With the pods running in the vault name space
 
 you can find the ui at
 > http://localhost:8500/ui/dc1/services
-
-
-kind --name gamebase load docker-image kms-rewrapper:local
-
-docker exec gamebase-control-plane mkdir -p /etc/kubernetes/manifests/userconfigs
-
-
-docker cp ./k8s-security-management/Kind-kube-apiserver.yaml gamebase-control-plane:/etc/kubernetes/manifests/kube-apiserver.yaml
-
-docker cp ./vault-kms/userconfigs/. gamebase-control-plane:/etc/kubernetes/manifests/userconfigs/
-
-kubectl annotate namespace kms consul.hashicorp.com/connect-inject="false" --overwrite
-
-kubectl edit mutatingwebhookconfiguration consul-connect-injector
-
-docker exec gamebase-control-plane systemctl restart kubelet
-
-kubectl annotate namespace kms consul.hashicorp.com/connect-inject="false" --overwrite
-
-chown root:root /etc/kubernetes/manifests/userconfigs/encryption-config.yaml
-chmod 600 /etc/kubernetes/manifests/userconfigs/encryption-config.yaml 
-
-
-docker exec -it gamebase-control-plane bash
