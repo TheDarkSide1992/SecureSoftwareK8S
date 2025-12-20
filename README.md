@@ -34,7 +34,7 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 > Create k8s namespaces
 >
 >```bash
->kubectl apply -f ./k8s-namespace/
+> kubectl apply -f ./k8s-namespace/
 >```
 
 >[!Note]
@@ -46,13 +46,13 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 > Create database secrets
 >
 >```bash
->kubectl create secret generic postgres-secret -n database   --from-literal=POSTGRES_DB='GameBaseDb'   --from-literal=username='postgres'   --from-literal=password='Your$ecureP@ssw0rd!'
+> kubectl create secret generic postgres-secret -n database   --from-literal=POSTGRES_DB='GameBaseDb'   --from-literal=username='postgres'   --from-literal=password='Your$ecureP@ssw0rd!'
 >```
 
 > Create k8s pods
 >
 >```bash
->kubectl apply -f ./k8s/
+> kubectl apply -f ./k8s/
 >```
 
 > View pods for gamebase and database namespaces
@@ -70,11 +70,9 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 > If you want a view over all pods on your system
 >
 >```bash
->kubectl get pods --all-namespaces -o wide
+> kubectl get pods --all-namespaces -o wide
 >```
 
-
->
 > If you want to confirm encryption at rest is working for secrets you can use the following command and search for GameBaseDb then you will see the value for key1 is encrypted
 >
 >```bash
@@ -83,7 +81,7 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 
 > [!WARNING]
 > Please be aware that its a big file, so its not recommended to use a cmd editor that reads the whole file at once like cat, since it will spam your terminal
->
+
 > use this command to open the etcd db file in vi editor(vi dosnt show the whole file at once so its better for this usecase)
 > ```bash
 > sudo vi /var/lib/minikube/etcd/member/snap/db
@@ -102,7 +100,7 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 > Deletes the minikube cluster
 >
 >```bash
->minikube delete
+> minikube delete
 >```
 
 > Removes all extra configs from minikube (only needed if you want to start a new cluster without the security features or other extra features)
