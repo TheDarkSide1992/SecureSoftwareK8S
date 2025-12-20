@@ -78,10 +78,14 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 >```bash
 > minikube ssh
 >```
->then use
+> then use(please dont try and be smart about it and use cat, its a big file and will spam your terminal)
 > ```bash
 > sudo vi /var/lib/minikube/etcd/member/snap/db
 > ```
+> then search for GameBaseDb by typing /GameBaseDb and hitting enter
+> It should says pattern not found, or if its not encrypted you will see the secrets in plain text
+> if it is encrypted you can try to search for key1, postgres-secret or secretbox and then it should show you some encrypted values
+> you can use :qa to exit vi
 
 > Remove (deleting a namespace will also remove all resources within it)
 >
