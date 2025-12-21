@@ -28,6 +28,8 @@ For now you can run these commands in this order
 
 Please setup rest encryption for k8s secrets first [Guide](k8s-rest-encryption.md)
 
+if you want to try kms v2 setup for k8s rest encryption please follow this guide first [Guide](key-managment-system-set-up.md)
+
 Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 
 
