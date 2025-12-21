@@ -5,8 +5,8 @@ resources:
       - secrets
     providers:
       - kms:
+          endpoint: unix:///var/lib/vault-kms/kms.sock
+          timeout: 3s
           apiVersion: v2
           name: vault-kms-provider
-          endpoint: unix:///var/kms/kms.sock
-          timeout: 30s
       - identity: {}

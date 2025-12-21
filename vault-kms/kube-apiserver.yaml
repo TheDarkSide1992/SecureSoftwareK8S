@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   annotations:
-    kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 172.18.0.2:6443
+    kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 192.168.49.2:8443
   labels:
     component: kube-apiserver
     tier: control-plane
@@ -12,41 +12,40 @@ spec:
   containers:
   - command:
     - kube-apiserver
-    - --advertise-address=172.18.0.2
-    - --encryption-provider-config=/etc/kubernetes/manifests/userconfigs/encryption-config.yaml
+    - --advertise-address=192.168.49.2
     - --allow-privileged=true
     - --authorization-mode=Node,RBAC
-    - --client-ca-file=/etc/kubernetes/pki/ca.crt
-    - --enable-admission-plugins=NodeRestriction
+    - --client-ca-file=/var/lib/minikube/certs/ca.crt
+    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota
     - --enable-bootstrap-token-auth=true
-    - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
-    - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
-    - --etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key
+    - --encryption-provider-config=/etc/kubernetes/encryption-config.yaml
+    - --etcd-cafile=/var/lib/minikube/certs/etcd/ca.crt
+    - --etcd-certfile=/var/lib/minikube/certs/apiserver-etcd-client.crt
+    - --etcd-keyfile=/var/lib/minikube/certs/apiserver-etcd-client.key
     - --etcd-servers=https://127.0.0.1:2379
-    - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
-    - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+    - --kubelet-client-certificate=/var/lib/minikube/certs/apiserver-kubelet-client.crt
+    - --kubelet-client-key=/var/lib/minikube/certs/apiserver-kubelet-client.key
     - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
-    - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
-    - --proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key
+    - --proxy-client-cert-file=/var/lib/minikube/certs/front-proxy-client.crt
+    - --proxy-client-key-file=/var/lib/minikube/certs/front-proxy-client.key
     - --requestheader-allowed-names=front-proxy-client
-    - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+    - --requestheader-client-ca-file=/var/lib/minikube/certs/front-proxy-ca.crt
     - --requestheader-extra-headers-prefix=X-Remote-Extra-
     - --requestheader-group-headers=X-Remote-Group
     - --requestheader-username-headers=X-Remote-User
-    - --runtime-config=
-    - --secure-port=6443
+    - --secure-port=8443
     - --service-account-issuer=https://kubernetes.default.svc.cluster.local
-    - --service-account-key-file=/etc/kubernetes/pki/sa.pub
-    - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
-    - --service-cluster-ip-range=10.96.0.0/16
-    - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
-    - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+    - --service-account-key-file=/var/lib/minikube/certs/sa.pub
+    - --service-account-signing-key-file=/var/lib/minikube/certs/sa.key
+    - --service-cluster-ip-range=10.96.0.0/12
+    - --tls-cert-file=/var/lib/minikube/certs/apiserver.crt
+    - --tls-private-key-file=/var/lib/minikube/certs/apiserver.key
     image: registry.k8s.io/kube-apiserver:v1.34.0
     imagePullPolicy: IfNotPresent
     livenessProbe:
       failureThreshold: 8
       httpGet:
-        host: 172.18.0.2
+        host: 192.168.49.2
         path: /livez
         port: probe-port
         scheme: HTTPS
@@ -55,13 +54,13 @@ spec:
       timeoutSeconds: 15
     name: kube-apiserver
     ports:
-    - containerPort: 6443
+    - containerPort: 8443
       name: probe-port
       protocol: TCP
     readinessProbe:
       failureThreshold: 3
       httpGet:
-        host: 172.18.0.2
+        host: 192.168.49.2
         path: /readyz
         port: probe-port
         scheme: HTTPS
@@ -73,7 +72,7 @@ spec:
     startupProbe:
       failureThreshold: 24
       httpGet:
-        host: 172.18.0.2
+        host: 192.168.49.2
         path: /livez
         port: probe-port
         scheme: HTTPS
@@ -81,13 +80,16 @@ spec:
       periodSeconds: 10
       timeoutSeconds: 15
     volumeMounts:
+    - mountPath: /etc/kubernetes/encryption-config.yaml
+      name: encryption-config
+      readOnly: true
     - mountPath: /etc/ssl/certs
       name: ca-certs
       readOnly: true
     - mountPath: /etc/ca-certificates
       name: etc-ca-certificates
       readOnly: true
-    - mountPath: /etc/kubernetes/pki
+    - mountPath: /var/lib/minikube/certs
       name: k8s-certs
       readOnly: true
     - mountPath: /usr/local/share/ca-certificates
@@ -96,11 +98,8 @@ spec:
     - mountPath: /usr/share/ca-certificates
       name: usr-share-ca-certificates
       readOnly: true
-    - name: enc-config
-      mountPath: /etc/kubernetes/manifests/userconfigs
-      readOnly: true
     - name: kms-socket
-      mountPath: /vault-kms
+      mountPath: "/var/lib/vault-kms/"
       readOnly: false
   hostNetwork: true
   priority: 2000001000
@@ -110,6 +109,10 @@ spec:
       type: RuntimeDefault
   volumes:
   - hostPath:
+      path: /etc/kubernetes/encryption-config.yaml
+      type: File
+    name: encryption-config
+  - hostPath:
       path: /etc/ssl/certs
       type: DirectoryOrCreate
     name: ca-certs
@@ -118,7 +121,7 @@ spec:
       type: DirectoryOrCreate
     name: etc-ca-certificates
   - hostPath:
-      path: /etc/kubernetes/pki
+      path: /var/lib/minikube/certs
       type: DirectoryOrCreate
     name: k8s-certs
   - hostPath:
@@ -129,10 +132,6 @@ spec:
       path: /usr/share/ca-certificates
       type: DirectoryOrCreate
     name: usr-share-ca-certificates
-  - name: enc-config
-    hostPath:
-      path: /etc/kubernetes/manifests/userconfigs
-      type: Directory
   - name: kms-socket
     hostPath:
       path: /var/lib/vault-kms/

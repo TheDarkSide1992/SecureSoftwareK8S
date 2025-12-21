@@ -7,39 +7,32 @@ import hvac
 VAULT_ADDR = "http://vault.kms.svc.cluster.local:8200"
 TRANSIT_KEY = "k8s-kek"
 CHECK_INTERVAL = 86400 # Checks once per day
+CERT_DIR = "/var/vault-cert"
+CA_CERT = os.path.join(CERT_DIR, "vault-ca.crt") 
+CLIENT_CERT = os.path.join(CERT_DIR,"client.crt")
+CLIENT_KEY = os.path.join(CERT_DIR,"client.key")
 
 
 def get_vault_client():
-    config.load_incluster_config()
-    v1 = client.CoreV1Api()
+    
+    client = hvac.Client(url=VAULT_ADDR, verify=CA_CERT)
 
-    namespace = os.getenv("POD_NAMESPACE", "kms")
-    sa_name = os.getenv("SERVICE_ACCOUNT_NAME", "vault-kms")
-    vault_addr = os.getenv("VAULT_ADDR", "http://vault-kms.kms.svc.cluster.local:8200")
-    vault_role = os.getenv("VAULT_ROLE", "vault-kms")
+    try:
+        with open(CLIENT_CERT, 'rb') as f_cert, open(CLIENT_KEY, 'rb') as f_key:
+            client.auth.cert.login(
+                name="vault-internal-ca",
+                cert_pem=f_cert.read(),
+                key_pem=f_key.read(),
+            )
 
-    token_request_body = client.V1TokenRequest(
-        spec=client.V1TokenRequestSpec(
-            audiences=["https://kubernetes.default.svc.cluster.local"],
-            expiration_seconds=600 
-        )
-    )
-
-    token_response = v1.create_namespaced_service_account_token(
-        name=sa_name,
-        namespace=namespace,
-        body=token_request_body
-    )
-
-    jwt = token_response.status.token
-
-    vault_client = hvac.Client(url=vault_addr)
-    vault_client.auth.kubernetes.login(
-        role=vault_role,
-        jwt=jwt
-    )
-
-    return vault_client
+        # 3. Verify we are authenticated
+        if client.is_authenticated():
+            print("Successfully authenticated with Vault via TLS Cert!")
+            return client
+            
+    except Exception as e:
+        print(f"Vault Connection/Auth Failed: {e}")
+        return None
 
 def rotate_and_sync_etcd():
     """Binds Vault rotation with Kubernetes etcd updates"""

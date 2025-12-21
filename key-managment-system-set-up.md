@@ -2,126 +2,96 @@
 
 >[!WARNING]
 > 
+> if you want to use this you will need to create a seprate docker container for the vault would cause the minikube to not start when encryption is enabled  so moving it to a separate container is a good idea
+> 
 > This might cause your minikube to hang and crash on start up.
 > 
 > if you successfully get it to start up do not delete kms vault because then you kubernetes environment can never decrypt the existing secrets
-> 
 
 >```bash
 >minikube start
 >```
 
-
-> With minikube running we need to copy the encryption config
+> create vault ca
 > 
 > ```bash
-> minikube ./vault-kms/encryption-config.yaml minikube:/tmp/encryption-config.yaml
+> openssl genrsa -out ./vault-kms/vault-server-certs/ca.key 2048
+> openssl req -x509 -new -nodes -key ./vault-kms/vault-server-certs/ca.key -sha256 -days 3650 -out ./vault-kms/vault-server-certs/ca.crt -subj "/CN=Vault-Internal-CA" -config ./vault-kms/vault-server-certs/ca.cnf -extensions v3_ca
 > ```
 
-
-> SSH into the minicube instance
+> Create vault server certs
 > 
 > ```bash
-> minikube ssh
+> openssl req -new -newkey rsa:2048 -nodes -keyout ./vault-kms/vault-server-certs/vault.key -out ./vault-kms/vault-server-certs/vault.csr -subj "/CN=host.minikube.internal"
+> openssl x509 -req -in ./vault-kms/vault-server-certs/vault.csr -CA ./vault-kms/vault-server-certs/ca.crt -CAkey ./vault-kms/vault-server-certs/ca.key -CAcreateserial -out ./vault-kms/vault-server-certs/vault.crt -days 365 -sha256 -extfile ./vault-kms/vault-server-certs/san.cnf -extensions v3_req
 >```
 
- 
-> Make kms directory in minikube
+> Make certs on your host for the vault
 > 
 > ```bash
-> sudo mkdir -p /var/kms/ && sudo chmod 777 /var/kms
+> cd ./vault-kms/vault-server-certs
+> openssl genrsa -out client.key 2048
+> openssl req -new -key client.key -subj '/CN=vault-kms-provider' -out client.csr
+> openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 365 -sha256 -extfile clientauth.cnf -extensions v3_client_auth
+> cd ./../..
 > ```
-
-> Exit minikube
-> 
-> ```bash
->  exit
-> ```
-
 
 ## Set up Kms vault 
 
 
-> Get Hashicorp helm repository if you do not have it
->
+>[!NOTE]
+> you should never use this in production
+> Docker vault container setup
 > ```bash
-> helm repo add hashicorp https://helm.releases.hashicorp.com
+> docker run -d --cap-add=IPC_LOCK --name vault-kms-backend -p 8200:8200 -p 8201:8201  -v ./vault-kms/vault-config.json:/vault/config/local.json -v ./vault-kms/vault-server-certs:/vault/certs -v ./vault-kms/vault-data:/vault/file  hashicorp/vault server
 > ```
 
-> Install the hashicorp vault with helm
+> Copy policy file to docker and minikube ca
+
 > ```bash
-> helm install vault-kms hashicorp/vault --create-namespace --namespace kms --values ./vault-kms/vault-kms-values.yaml
+> docker cp ./vault-kms/policies/kms-policy.hcl vault-kms-backend:/tmp/kms-policy.hcl
 > ```
 
-> Copy policies in to vault
+
+> Docker interactive session
 > 
-> ```bash
-> kubectl cp -n kms ./vault-kms/policies/kms-policy.hcl vault-kms-0:/tmp/kms-policy.hcl
-> ```
-
-> Creates a json file with tokens required for accessing the vault
-> 
->  the keys gets saved in v/ault-kms/cluster-keys
->
-> ```bash
-> kubectl exec -i -n kms vault-kms-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json 2>/dev/null | tee ./vault-kms/cluster-keys.json > /dev/null
-> ```
-
-
-> [!NOTE]
->
-> In the fallowing command for unsealing the vault in pod vault-0 unseal_keys_b64 value from the json file in /vault-kms/cluster-keys.json
-
-> Unseal vault in pod vault-0
->
-> ```bash
-> kubectl exec -n kms vault-kms-0 -- vault operator unseal
-> ```
-
-> Makes pods vault-1 and vault-2 join the vault-0 pod
->
-> ```bash
-> kubectl exec -n kms -ti vault-kms-1 -- vault operator raft join http://vault-kms-0.vault-kms-internal:8200 && kubectl exec -n kms -ti vault-kms-2 -- vault operator raft join http://vault-kms-0.vault-kms-internal:8200
-> ```
-
-> [!NOTE]
->
-> In the fallowing command for unsealing the vault in pod vault-1 unseal_keys_b64 value from the json file in /vault-kms/cluster-keys.json
-
-> Unseal vault-1
->
-> ```bash
-> kubectl exec -n kms -ti vault-kms-1 -- vault operator unseal <inset unseal_keys_b64 key>
-> ```
-
-> [!NOTE]
->
-> In the fallowing command for unsealing the vault in pod vault-2 unseal_keys_b64 value from the json file in /vault-kms/cluster-keys.json
-
-> Unseal vault-2
->
-> ```bash
-> kubectl exec -n kms -ti vault-kms-2 -- vault operator unseal <inset unseal_keys_b64 key>
-> ```
-
->login to vault
-> ```bash
->  kubectl exec -it vault-kms-0 -n kms -- /bin/sh
+>```bash
+> docker exec -it vault-kms-backend sh
 >```
 
-> type
+
+> Set up local vault url for vault set up
 > ```bash
-> vault login
+>  export VAULT_CACERT='/vault/certs/vault.crt'
+>  export VAULT_ADDR='https://127.0.0.1:8200'
+>```
+
+> Initialize vault remember to save the output of this
+> you can change the key-shares and key-threshold to whatever you like
+>
+> ```bash
+> vault operator init -tls-skip-verify -key-shares=1 -key-threshold=1
 > ```
 
-> then insert the root token from /vault-kms/cluster-keys.json
-
-> enable kubernetes auth
-> run in vault
+> Unseal the vault
+> 
+> use the unseal_keys from the init output
+> 
 > ```bash
-> vault auth enable kubernetes
-> vault write auth/kubernetes/config  kubernetes_host="https://kubernetes.default.svc.cluster.local" disable_iss_validation=true
->```
+> vault operator unseal <inset unseal key>
+> ```
+
+> login to the vault
+> use the root_token from the init output
+> ```bash
+> vault login <root_token>
+> ```
+
+> Enable cert auth in vault
+> 
+> ```bash
+> vault auth enable cert
+> ```
 
 > Set up vault policy
 > run in vault
@@ -129,17 +99,18 @@
 > vault policy write vault-kms-policy /tmp/kms-policy.hcl
 >```
 
+> Enable cert auth in vault
+>
+> ```bash
+> vault write auth/cert/certs/vault-internal-ca certificate=@/vault/certs/ca.crt allowed_common_names="vault-kms-provider" display_name="kms-auth" policies="vault-kms-policy" ttl=768h
+> ```
+
+
 > Enable transit in vault
 > run in vault
 > ```bash
 > vault secrets enable transit
 > vault write -f transit/keys/k8s-kek
-> ```
-
-> Set up kubernetes auth role
-> run in vault
-> ```bash
-> vault write auth/kubernetes/role/vault-kms bound_service_account_names=vault-kms bound_service_account_namespaces=kms audience="https://kubernetes.default.svc.cluster.local" policies=vault-kms-policy ttl=24h
 > ```
 
 > Enable vault audit logging
@@ -154,7 +125,6 @@
 > exit
 > ```
 
-
 > Build Docker image of python rewrapper
 > 
 > ```bash
@@ -166,29 +136,72 @@
 > minikube image load kms-rewrapper:local
 >  ```
 
-> Apply the kms manifest
-> 
+
+> With minikube running we need to copy the encryption config
+>
 > ```bash
-> kubectl apply -f ./kmsv2-manifest-k8s.yaml
+> minikube cp vault-kms/minikube-kms-files/encryption-config.yaml minikube:/tmp/encryption-config.yaml
+> minikube cp vault-kms/kms-v2-manifest-k8s.yaml minikube:/tmp/kms-v2-manifest-k8s.yaml
+> minikube cp vault-kms/vault-server-certs/ca.crt minikube:/tmp/vault-ca.crt
+> minikube cp vault-kms/vault-server-certs/client.crt minikube:/tmp/client.crt
+> minikube cp vault-kms/vault-server-certs/client.key minikube:/tmp/client.key
+> minikube cp vault-kms/kube-apiserver.yaml minikube:/tmp/kube-apiserver.yaml
 > ```
 
-> Check if kms pods are running
+
+> SSH into the minicube instance
+>
+> ```bash
+> minikube ssh
+>```
+
+> Make vault ca chart dir
 > 
 > ```bash
-> kubectl get pods -n kms
+> sudo mkdir -p /var/vault-cert
+> sudo chmod 755 /var/vault-cert
+> ```
+
+
+> At this point we move the encryption config 
+>
+>```bash
+> sudo mv /tmp/encryption-config.yaml /etc/kubernetes/encryption-config.yaml && \
+> sudo mv /tmp/kms-v2-manifest-k8s.yaml /etc/kubernetes/manifests/kms-v2-manifest-k8s.yaml && \
+> sudo mv /tmp/vault-ca.crt /var/vault-cert/vault-ca.crt && \
+> sudo mv /tmp/client.crt /var/vault-cert/client.crt && \
+> sudo mv /tmp/client.key /var/vault-cert/client.key && \
+> sudo mv /tmp/kube-apiserver.yaml /etc/kubernetes/manifests/kube-apiserver.yaml
+>```
+
+> make the right perms for the files
+> ```bash
+> sudo chown root:root /etc/kubernetes/manifests/kms-v2-manifest-k8s.yaml && \
+> sudo chmod 644 /etc/kubernetes/manifests/kms-v2-manifest-k8s.yaml
+> sudo chown root:root /etc/kubernetes/encryption-config.yaml && \
+> sudo chmod 600 /etc/kubernetes/encryption-config.yaml && \
+> sudo sudo chown root:root /var/vault-cert/vault-ca.crt && \
+> sudo chmod 644 /var/vault-cert/vault-ca.crt && \
+> sudo sudo chown root:root /var/vault-cert/client.crt && \
+> sudo chmod 644 /var/vault-cert/client.crt && \
+> sudo sudo chown root:root /var/vault-cert/client.key && \
+> sudo chown root:root /etc/kubernetes/manifests/kube-apiserver.yaml && \
+> sudo chmod 644 /etc/kubernetes/manifests/kube-apiserver.yaml && \
+> sudo chmod 644 /var/vault-cert/client.key
+> ```
+
+
+> Exit minikube
+>
+> ```bash
+> exit
 > ```
 
 > Stop minikube
 > 
 > ```bash
-> minikube stop
+> minikube stop && minikube start
 > ```
-
-> start minikube with mounts and extra config
-> 
-> ```bash
-> minikube start --mount --mount-string="./vault-kms/minikubekms-files:/var/kms" --extra-config=apiserver.encryption-provider-config=/var/kms/encryption-config.yaml
-> ````
 
 > Test secret rotation
 > 
