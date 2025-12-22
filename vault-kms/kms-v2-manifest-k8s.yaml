@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vault-kubernetes-kms
+  namespace: kube-system
+  labels:
+    component: vault-kms-plugin
+    tier: control-plane
+  annotations:
+    consul.hashicorp.com/connect-inject: "false"
+spec:
+  initContainers:
+    - name: setup-socket-dir
+      image: busybox
+      command: [ "sh", "-c", "chown -R 1000:2000 /var/lib/vault-kms/ && chmod 775 /var/lib/vault-kms/" ]
+      volumeMounts:
+        - name: kms-socket
+          mountPath: "/var/lib/vault-kms/"
+      securityContext:
+        runAsUser: 0
+  
+  priorityClassName: system-cluster-critical
+  hostNetwork: true
+  dnsPolicy: ClusterFirstWithHostNet
+  securityContext:
+    runAsUser: 0  #do not do this in production
+  containers:
+    - name: vault-kms-provider
+      image: ruddickmg/vault-kms-provider:latest
+      imagePullPolicy: Always
+      env:
+        - name: VAULT_ADDRESS
+          value: "https://host.minikube.internal:8200"
+        - name: VAULT_AUTH_METHOD
+          value: cert
+        - name: VAULT_TRANSIT_KEY
+          value: "k8s-kek"
+        - name: SOCKET_PATH
+          value: "/var/lib/vault-kms/kms.sock"
+        - name: VAULT_TRANSIT_MOUNT
+          value: "transit"
+        - name: SOCKET_PERMISSIONS
+          value: "666"
+        - name: VAULT_CERTIFICATE_NAME
+          value: vault-internal-ca
+        - name: VAULT_CA_CERT
+          value: /var/vault-cert/vault-ca.crt
+        - name: VAULT_CLIENT_CERT
+          value: /var/vault-cert/client.crt
+        - name: VAULT_CLIENT_KEY
+          value: /var/vault-cert/client.key
+      volumeMounts:
+        - name: kms-socket
+          mountPath: "/var/lib/vault-kms/"
+          readOnly: false
+        - name: vault-crt
+          mountPath: "/var/vault-cert"
+          readOnly: true
+
+
+    - name: kms-rewrapper
+      image: kms-rewrapper:local
+      imagePullPolicy: Never
+      volumeMounts:
+        - name: vault-crt
+          mountPath: "/var/vault-cert"
+          readOnly: true
+
+
+  volumes:
+    - name: kms-socket
+      hostPath:
+        path: /var/lib/vault-kms/
+        type: DirectoryOrCreate
+    - name: vault-crt
+      hostPath:
+        path: /var/vault-cert
+        type: Directory

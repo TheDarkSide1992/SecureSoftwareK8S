@@ -271,7 +271,7 @@ With the pods running in the vault name space
 > Set up vault-ca secret
 > 
 > ```bash
-> kubectl create secret generic vault-ca -n consul --from-file vault.ca=./consul/vault_ca.crt
+> kubectl create secret generic vault-ca -n consul --from-file vault.ca=./consul/vault-ca.crt
 > ```
 
 > Set up consul pods

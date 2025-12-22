@@ -1,0 +1,23 @@
+# Stage 1: Build
+FROM ubuntu:24.04 AS build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip python3-venv build-essential && \
+    rm -rf /var/lib/apt/lists/*
+RUN python3 -m venv /opt/venv
+RUN /opt/venv/bin/pip install --no-cache-dir --upgrade pip && \
+    /opt/venv/bin/pip install --no-cache-dir hvac kubernetes
+
+# Stage 2: Final
+FROM python:3.13-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+gcc libc-dev && \
+rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+RUN pip install --no-cache-dir --upgrade pip && \
+pip install --no-cache-dir hvac kubernetes
+COPY --from=build /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+COPY ["vault-kms/python-scripts/rewrap.py/", "./"]
+RUN useradd -m kmsuser && chown -R kmsuser:kmsuser /app
+USER kmsuser
+ENTRYPOINT ["python", "rewrap.py"]

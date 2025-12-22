@@ -1,0 +1,12 @@
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+      - secrets
+    providers:
+      - kms:
+          endpoint: unix:///var/lib/vault-kms/kms.sock
+          timeout: 3s
+          apiVersion: v2
+          name: vault-kms-provider
+      - identity: {}

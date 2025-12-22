@@ -53,6 +53,7 @@ ui:
 connectInject:
   enabled: true
   default: true
+  k8sDenyNamespaces: ['kms']
   metrics:
     defaultEnabled: true
   apiGateway:

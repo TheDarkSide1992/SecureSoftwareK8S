@@ -51,7 +51,7 @@
 > run in consul server
 >
 > ```bash
-> consul acl policy create -name postgres-connect -rules @/consul/policies/consul-postgres-ACL-policy.hcl
+> consul acl policy create -name postgres-connect -rules @/tmp/consul-postgres-ACL-policy.hcl
 > consul acl token create -description "postgres connect" -policy-name postgres-connect
 > ```
 
