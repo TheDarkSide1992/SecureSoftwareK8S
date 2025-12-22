@@ -25,7 +25,6 @@ def get_vault_client():
                 key_pem=f_key.read(),
             )
 
-        # 3. Verify we are authenticated
         if client.is_authenticated():
             print("Successfully authenticated with Vault via TLS Cert!")
             return client
