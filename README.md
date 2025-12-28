@@ -50,6 +50,10 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 >```bash
 > kubectl create secret generic postgres-secret -n database   --from-literal=POSTGRES_DB='GameBaseDb'   --from-literal=username='postgres'   --from-literal=password='Your$ecureP@ssw0rd!'
 >```
+>
+>```bash
+> kubectl create secret generic gamebase-db-secret -n gamebase   --from-literal=pgconn='Host=GameBaseDb;Database=GameBaseDb;User Id=postgres;Password=Your$ecureP@ssw0rd!;Port=5432'
+>```
 
 > Create k8s pods
 >

@@ -33,6 +33,11 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           env:
+            - name: pgconn
+              valueFrom:
+                secretKeyRef:
+                  name: gamebase-db-secret
+                  key: pgconn
             - name: CONSUL_ACL
               valueFrom:
                 secretKeyRef:
