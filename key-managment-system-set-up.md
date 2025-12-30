@@ -8,7 +8,7 @@
 > 
 > if you successfully get it to start up do not delete kms vault because then you kubernetes environment can never decrypt the existing secrets
 > 
-> in this guide there will be created a static pod in the kube-system namespace because the key managment system v2 provider needs to be started and ready before the kube-apiserver starts
+> in this guide there will be created a static pod in the kube-system namespace because the key manaFgment system v2 provider needs to be started and ready before the kube-apiserver starts
 > it will also copy over a new kube-apiserver manifest to make sure the encryption config is loaded on startup of the kube-apiserver and the directory for the unix socket used by the kms provider is created on start up
 > 
 > it also shows how to create the vault certs needed for the setup using .cnf files which are a way to configure openssl commands so that you could add extra options like subject alternative names and extensions and not have to change the command used to create the cert too much
@@ -47,8 +47,8 @@
 >[!WARNING]
 > you should never use this in production
 > this is only for local testing and learning purposes
-> the vault runs in a docker container on its own outside of the cluster because avoid having startup issues with minikube
-> Ksm v2 is only supported in k8s 1.21+
+> the vault runs in a docker container on its own outside of the cluster to avoid having startup issues with minikube
+> Kms v2 is only supported in k8s 1.21+
 > Kms allows for envelopment encryption of secrets at rest in k8s clusters
 > A secret is encrypted with a data encryption key(DEK) which is then encrypted with a key encryption key(KEK) stored in the kms provider(vault in this case)
 > The key encryption key is handled by vault and is set up to rotate on a schedule of 90 days and can be manually rotated as well

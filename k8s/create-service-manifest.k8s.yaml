@@ -5,8 +5,6 @@ metadata:
     app: create-service
   name: create-service
   namespace: gamebase
-  annotations:
-    consul.hashicorp.com/connect-inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 2
@@ -21,6 +19,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
       labels:
         app: create-service
     spec:
@@ -55,8 +55,6 @@ kind: Service
 metadata:
   name: create-service
   namespace: gamebase
-  annotations:
-    consul.hashicorp.com/connect-inject: "true"
 spec:
   selector:
     app: create-service

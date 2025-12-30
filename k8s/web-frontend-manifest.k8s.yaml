@@ -5,8 +5,7 @@ metadata:
     app: web-frontend
   name: web-frontend
   namespace: gamebase
-  annotations:
-    consul.hashicorp.com/connect-inject: "true"
+  
 spec:
   progressDeadlineSeconds: 600
   replicas: 4
@@ -21,6 +20,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
       labels:
         app: web-frontend
     spec:
@@ -28,8 +29,23 @@ spec:
       containers:
         - image: ghcr.io/emil476m/gamebase-web:0.0.37
           imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4200
+              name: http
+              protocol: TCP
           name: gamebase-web
           resources: {}
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              # We replace the old IP with the internal Ocelot Service address
+              # Format: http://service-name.namespace.svc.cluster.local:port
+              sed -i 's|http://167.86.127.39:8080/|https://gateway.gamebase.svc.cluster.local:8080/|g' /usr/share/nginx/html/www/main*.js
+              find /usr/share/nginx/html -name "*.js" -exec sed -i "s|http://167.86.127.39:8080/|https://gateway.gamebase.svc.cluster.local:8080|g" {}
+
+              # Start the web server
+              echo "API patched in /www directory. Starting Nginx on 4200..."
+              nginx -g 'daemon off;'
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           env:
@@ -51,7 +67,7 @@ metadata:
   name: web-frontend
   namespace: gamebase
   annotations:
-    consul.hashicorp.com/connect-inject: "true"
+    consul.hashicorp.com/service-protocol: "http"
 spec:
   selector:
     app: web-frontend
@@ -59,3 +75,11 @@ spec:
     - port: 4200
       targetPort: 4200
       name: http
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: web-frontend
+  namespace: gamebase
+spec:
+  protocol: http

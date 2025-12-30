@@ -1,0 +1,77 @@
+﻿apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+ name: api-gateway
+ namespace: consul
+ labels:
+  app: api-gateway
+spec:
+ infrastructure:
+    labels:
+      app: api-gateway
+ gatewayClassName: consul
+ listeners:
+ - protocol: HTTPS
+   port: 8443
+   name: https
+   allowedRoutes:
+     namespaces:
+       from: All
+   tls:
+     mode: Terminate
+     certificateRefs:
+        - kind: Secret
+          name: consul-server-cert
+          namespace: consul
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: frontend-route
+  namespace: consul
+  labels:
+    gateway: api-gateway
+spec:
+  parentRefs:
+    - name: api-gateway
+      namespace: consul
+      sectionName: https
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: web-frontend
+          namespace: gamebase
+          port: 4200
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-consul-to-gamebase
+  namespace: gamebase
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: consul
+  to:
+    - group: ""
+      kind: Service
+      name: web-frontend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: consul
+spec:
+  type: NodePort
+  selector:
+    gateway.consul.hashicorp.com/name: api-gateway
+  ports:
+    - name: https
+      protocol: TCP
+      port: 8443
+      targetPort: 8443

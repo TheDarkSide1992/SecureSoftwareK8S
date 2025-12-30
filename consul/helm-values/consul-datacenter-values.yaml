@@ -13,7 +13,7 @@ global:
       
       manageSystemACLsRole: consul-acl-manager
   tls:
-    enabled: false
+    enabled: true
     enableAutoEncrypt: true
     caCert:
       secretName: "pki/cert/ca"
@@ -53,12 +53,11 @@ ui:
 connectInject:
   enabled: true
   default: true
-  k8sDenyNamespaces: ['kms']
   metrics:
     defaultEnabled: true
   apiGateway:
-    enabled: true
-    image: "hashicorp/consul-api-gateway:0.5.1"
+    manageExternalCRDs: true
     managedGatewayClass:
+      enable: true
       serviceType: NodePort
       useHostPorts: true
