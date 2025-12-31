@@ -1,0 +1,104 @@
+﻿{
+  "GlobalConfiguration": {
+    "BaseUrl": "http://gateway.gamebase.svc.cluster.local:8080"
+  },
+  "Routes":
+  [
+    {
+      "UpstreamHttpMethod": ["Get"],
+      "UpstreamPathTemplate": "/Search",
+      "DownstreamPathTemplate": "/SearchEngine",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "search-engine",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": ["Get"],
+      "UpstreamPathTemplate": "/Game/{GameId}",
+      "DownstreamPathTemplate": "/SearchEngine/Game/{GameId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "search-engine",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": ["Get"],
+      "UpstreamPathTemplate": "/Games/{page}",
+      "DownstreamPathTemplate": "/SearchEngine/Games/{page}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "search-engine",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": ["Post"],
+      "UpstreamPathTemplate": "/ReviewScore",
+      "DownstreamPathTemplate": "/Review",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "review-handler",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": ["Get"],
+      "UpstreamPathTemplate": "/ReviewScore/{gameId}",
+      "DownstreamPathTemplate": "/Review/{gameId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "review-handler",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": ["Post"],
+      "UpstreamPathTemplate": "/CreateGame",
+      "DownstreamPathTemplate": "/Create",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "create-service",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": ["Post"],
+      "UpstreamPathTemplate": "/CreateAIDescription",
+      "DownstreamPathTemplate": "/api/AIDescription",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "ai-descriptor",
+          "Port": 8080
+        }
+      ]
+    },
+    {
+      "UpstreamHttpMethod": ["Get"],
+      "UpstreamPathTemplate": "/AiFeature",
+      "DownstreamPathTemplate": "/api/Feature",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "ai-descriptor",
+          "Port": 8080
+        }
+      ]
+    }
+  ]
+}

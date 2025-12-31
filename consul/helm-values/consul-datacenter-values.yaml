@@ -1,4 +1,4 @@
-global:
+﻿global:
   enabled: true
   name: consul
   image: hashicorp/consul:1.22.1
@@ -25,6 +25,7 @@ global:
   metrics:
     enabled: true
     enableAgentMetrics: true
+    enableGatewayMetrics: true
     agentMetricsRetentionTime: "1m"
 
 server:
@@ -36,10 +37,6 @@ server:
 
   serverCert:
     secretName: "pki/issue/consul-server"
-  extraVolumes:
-    - type: "secret"
-      name: vault-ca
-      load: "false"
 
 ui:
   enabled: true
@@ -48,16 +45,17 @@ ui:
   metrics:
     enabled: true
     provider: "prometheus"
-    baseURL: http://prometheus-server.default.svc.cluster.local
+    baseURL: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
 
 connectInject:
   enabled: true
   default: true
+  k8sDenyNamespaces: ["monitoring"]
   metrics:
     defaultEnabled: true
+    defaultPrometheusScrapePort: 20200
   apiGateway:
-    manageExternalCRDs: true
     managedGatewayClass:
-      enable: true
-      serviceType: NodePort
+      service:
+        type: NodePort
       useHostPorts: true

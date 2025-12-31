@@ -13,17 +13,20 @@ import { ConfigService } from "../configservice";
   standalone: false,
 })
 export class SearchPage {
-  config = inject(ConfigService);
-  baseUrl = this.config.getApiGatewayUrl();
   gamelist : SearchDto[] = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private configService: ConfigService) {}
+
+  baseUrl(): string {
+    return this.configService.getApiGatewayUrl() || '';
+  }
+
 
   async search(query: string)
   {
     try {
       this.gamelist = [];
-      const call = this.http.get<SearchDto[]>(this.baseUrl + "Search?query=" + query);
+      const call = this.http.get<SearchDto[]>(this.baseUrl() + "Search?query=" + query);
       /*const result = await firstValueFrom<SearchDto[]>(call);
       this.gamelist = result;*/
       call.subscribe((resData: SearchDto[]) => {

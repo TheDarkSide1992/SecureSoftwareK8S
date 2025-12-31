@@ -25,27 +25,20 @@ spec:
       labels:
         app: web-frontend
     spec:
+      volumes:
+        - name: config-volume
+          secret:
+            secretName: frontend-config-secret
       serviceAccountName: web-frontend
       containers:
-        - image: ghcr.io/emil476m/gamebase-web:0.0.37
-          imagePullPolicy: IfNotPresent
+        - image: frontend:local
+          imagePullPolicy: Never
           ports:
             - containerPort: 4200
               name: http
               protocol: TCP
           name: gamebase-web
           resources: {}
-          command: [ "/bin/sh", "-c" ]
-          args:
-            - |
-              # We replace the old IP with the internal Ocelot Service address
-              # Format: http://service-name.namespace.svc.cluster.local:port
-              sed -i 's|http://167.86.127.39:8080/|https://gateway.gamebase.svc.cluster.local:8080/|g' /usr/share/nginx/html/www/main*.js
-              find /usr/share/nginx/html -name "*.js" -exec sed -i "s|http://167.86.127.39:8080/|https://gateway.gamebase.svc.cluster.local:8080|g" {}
-
-              # Start the web server
-              echo "API patched in /www directory. Starting Nginx on 4200..."
-              nginx -g 'daemon off;'
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           env:
@@ -54,6 +47,11 @@ spec:
                 secretKeyRef:
                   name: consul-acl
                   key: token
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/nginx/html/www/assets/config.json
+              subPath: config.json
+              readOnly: true
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

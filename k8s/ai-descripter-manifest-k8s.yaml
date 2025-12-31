@@ -21,6 +21,8 @@ spec:
     metadata:
       annotations:
         consul.hashicorp.com/connect-inject: "true"
+        consul.hashicorp.com/transparent-proxy: "true"
+        consul.hashicorp.com/transparent-proxy-overwrite-upstream-port: "8080"
       labels:
         app: ai-descriptor
     spec:
@@ -38,6 +40,10 @@ spec:
                 secretKeyRef:
                   name: consul-acl
                   key: token
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -55,5 +61,5 @@ spec:
     app: ai-descriptor
   ports:
     - port: 5000
-      targetPort: 5000
+      targetPort: 8080
       name: http

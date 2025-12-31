@@ -14,12 +14,14 @@ import { ConfigService } from "../configservice";
   standalone: false,
 })
 export class HomePage {
-  config = inject(ConfigService);
-  baseUrl = this.config.getApiGatewayUrl();
   gamelist: Array<GameDto> = [];
 
-  constructor(private mc: ModalController, private http: HttpClient) {
+  constructor(private mc: ModalController, private http: HttpClient, private configService: ConfigService) {
     this.getgameList();
+  }
+
+  baseUrl(): string {
+    return this.configService.getApiGatewayUrl() || '';
   }
 
 
@@ -37,7 +39,7 @@ export class HomePage {
         try {
           this.gamelist = [];
           //TODO fix pagination later
-          const call = this.http.get<GameDto[]>(this.baseUrl + "Games/" + 0);
+          const call = this.http.get<GameDto[]>(this.baseUrl() + "Games/" + 0);
           call.subscribe((resData: GameDto[]) => {
             if(page = 1)
             {

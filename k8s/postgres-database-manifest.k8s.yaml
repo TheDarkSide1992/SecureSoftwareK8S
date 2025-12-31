@@ -3,15 +3,15 @@ kind: Service
 metadata:
   name: postgres
   namespace: database
-  annotations:
-    consul.hashicorp.com/connect-inject: "true"
 spec:
-  clusterIP: None
   selector:
     app: postgres
   ports:
     - port: 5432
+      targetPort: 5432
       name: postgres
+      appProtocol: tcp
+      protocol: TCP
 ---
 
 
@@ -29,6 +29,10 @@ spec:
       app: postgres
   template:
     metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
+        consul.hashicorp.com/transparent-proxy: "true"
+        consul.hashicorp.com/transparent-proxy-overwrite-upstream-port: "5432"
       labels:
         app: postgres
     spec:

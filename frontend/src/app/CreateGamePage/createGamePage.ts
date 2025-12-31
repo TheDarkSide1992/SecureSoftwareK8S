@@ -19,8 +19,6 @@ import { ConfigService } from "../configservice";
   standalone: false,
 })
 export class CreateGamePage {
-  config = inject(ConfigService);
-  baseUrl = this.config.getApiGatewayUrl();
   AIFeat : EnabledAIFeature = new EnabledAIFeature();
 
   gameTitle = new FormControl('',[ Validators.required, Validators.minLength(3), Validators.maxLength(250)]);
@@ -38,9 +36,13 @@ export class CreateGamePage {
   yearlist : Array<string> = [];
   AskAi = new FormControl("", Validators.required);
   AIresp = new AIResponsDto();
-  constructor(private mc: ModalController, private http: HttpClient,) {
+  constructor(private mc: ModalController, private http: HttpClient, private configService: ConfigService) {
     this.createyearlist()
     this.checkAiFunction()
+  }
+
+  baseUrl(): string {
+    return this.configService.getApiGatewayUrl() || '';
   }
 
 
@@ -66,7 +68,7 @@ export class CreateGamePage {
       publishedYear : this.releseYear.value!,
     }
 
-    const call = this.http.post(this.baseUrl + 'CreateGame',game);
+    const call = this.http.post(this.baseUrl() + 'CreateGame',game);
     const result = await firstValueFrom(call);
     if(result != undefined)
     {
@@ -81,7 +83,7 @@ export class CreateGamePage {
 
   checkAiFunction()
   {
-    const call = this.http.get<EnabledAIFeature>(this.baseUrl + "AiFeature");
+    const call = this.http.get<EnabledAIFeature>(this.baseUrl() + "AiFeature");
     call.subscribe((resData: EnabledAIFeature) => {
       this.AIFeat.AiDescriptor = resData.AiDescriptor;
     });
@@ -92,7 +94,7 @@ export class CreateGamePage {
       {
         query: this.AskAi.value!,
       }
-    const call = this.http.post<AIResponsDto>(this.baseUrl + "CreateAIDescription",query,);
+    const call = this.http.post<AIResponsDto>(this.baseUrl() + "CreateAIDescription",query,);
     call.subscribe((resData: AIResponsDto) => {
       this.AIresp.response = resData.response;
     });

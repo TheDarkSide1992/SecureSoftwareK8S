@@ -8,16 +8,19 @@ export class ConfigService {
 
   constructor(private http: HttpClient) {}
 
-  // This method will be called during app initialization
   loadConfig() {
-    return firstValueFrom(
-      this.http.get('/assets/config.json')
-    ).then(config => {
-      this.config = config;
-    });
+    return firstValueFrom(this.http.get('./assets/config.json'))
+      .then(data => {
+        this.config = data;
+        console.log("Config successfully assigned:", this.config);
+      });
   }
 
-  getApiGatewayUrl() {
-    return this.config?.apiGatewayUrl;
+  getApiGatewayUrl(): string {
+    if (!this.config) {
+      console.warn('Config not yet loaded, returning empty string');
+      return '';
+    }
+    return this.config.ApiGatewayUrl;
   }
 }

@@ -85,3 +85,15 @@ spec:
     sources:
       - name: api-gateway
         action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: gateway
+  namespace: gamebase
+spec:
+  destination:
+    name: gateway
+  sources:
+    - name: api-gateway
+      action: allow

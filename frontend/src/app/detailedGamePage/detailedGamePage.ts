@@ -17,8 +17,6 @@ import { ConfigService } from "../configservice";
   standalone: false,
 })
 export class DetailedGamePage {
-  config = inject(ConfigService);
-  baseUrl = this.config.getApiGatewayUrl();
 
   ratinglist : Array<number> = [];
   ratingcontrol =  new FormControl(0, [Validators.required,Validators.min(1), Validators.max(10)]);
@@ -31,9 +29,15 @@ export class DetailedGamePage {
   gameScore = new FormControl('',[ Validators.required, Validators.min(0), Validators.max(10)]);
 
 
-  constructor(private http: HttpClient, private route: ActivatedRoute) {
+  constructor(private http: HttpClient, private route: ActivatedRoute, private configService: ConfigService) {
     this.createRatingList();
   }
+
+  baseUrl(): string {
+    return this.configService.getApiGatewayUrl() || '';
+  }
+
+
   ngOnInit() {
     this.getGameData();
     this.getGameScore();
@@ -49,7 +53,7 @@ export class DetailedGamePage {
 
   async getGameData(){
     try {
-      const call = this.http.get<GameDto>(this.baseUrl + "Game/" + this.route.snapshot.paramMap.get('gameId'));
+      const call = this.http.get<GameDto>(this.baseUrl() + "Game/" + this.route.snapshot.paramMap.get('gameId'));
       const result = await firstValueFrom<GameDto>(call);
 
       this.gameTitle.setValue(result.gameName);
@@ -70,7 +74,7 @@ export class DetailedGamePage {
 
   async getGameScore(){
     try {
-      const call = this.http.get<ReviewDto>(this.baseUrl + "ReviewScore/" + this.route.snapshot.paramMap.get('gameId'));
+      const call = this.http.get<ReviewDto>(this.baseUrl() + "ReviewScore/" + this.route.snapshot.paramMap.get('gameId'));
       const result = await firstValueFrom<ReviewDto>(call);
 
       this.gameScore.setValue(result.gameScore.toString());
@@ -92,7 +96,7 @@ export class DetailedGamePage {
         score : this.ratingcontrol.value!,
       }
 
-      const call = this.http.post<ReviewDto>(this.baseUrl + "ReviewScore", review);
+      const call = this.http.post<ReviewDto>(this.baseUrl() + "ReviewScore", review);
       const result = await firstValueFrom<ReviewDto>(call);
 
       this.gameScore.setValue(result.gameScore.toString());
