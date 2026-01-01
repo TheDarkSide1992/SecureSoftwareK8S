@@ -1,4 +1,4 @@
-﻿### This is a guid on setting up an observability suite for traffic within the service mesh
+﻿### This is a guide on setting up an observability suite for traffic within the service mesh
 
 
 ## Prerequisites
