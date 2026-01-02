@@ -38,7 +38,7 @@ else
                 .WithOrigins(
                     "http://localhost:4200",
                     "http://gamebasefrontend:4200",
-                    "http://" + Environment.GetEnvironmentVariable("VPS_IP") + ":4200",
+                    "http://" + Environment.GetEnvironmentVariable("VPS_IP") + ":4200"
                 )
                 .AllowAnyMethod()
                 .AllowAnyHeader();
