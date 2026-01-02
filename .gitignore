@@ -88,3 +88,5 @@ cluster-keys.json
 note.txt
 /consul/vault-ca.crt
 /k8s-security-management/database-security-config.k8s.yaml
+/consul/gateway.crt
+/consul/gateway.key
