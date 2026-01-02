@@ -1,0 +1,31 @@
+﻿prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+
+grafana:
+  enabled: true
+  sidecar:
+    datasources:
+      enabled: true
+      defaultDatasourceEnabled: false
+      label: grafana_datasource
+      labelValue: "1"
+  additionalDataSources:
+    - name: Prometheus
+      type: prometheus
+      uid: prom-001
+      orgId: 1
+      access: proxy
+      url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+      isDefault: true
+      jsonData:
+      timeInterval: "30s"
+    - name: Loki
+      type: loki
+      uid: loki-001
+      orgId: 1
+      url: http://loki-gateway.monitoring.svc.cluster.local
+      access: proxy
+      isDefault: false

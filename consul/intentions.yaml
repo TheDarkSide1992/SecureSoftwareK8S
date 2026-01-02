@@ -1,0 +1,99 @@
+﻿apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: gateway
+  namespace: gamebase
+spec:
+  destination:
+    name: gateway
+  sources:
+    - name: web-frontend
+      action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: review-handler
+  namespace: gamebase
+spec:
+  destination:
+    name: review-handler
+  sources:
+    - name: gateway
+      action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+    name: search-engine
+    namespace: gamebase
+spec:
+    destination:
+        name: search-engine
+    sources:
+      - name: gateway
+        action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: create-service
+  namespace: gamebase
+spec:
+    destination:
+        name: create-service
+    sources:
+      - name: gateway
+        action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+    name: postgres
+    namespace: database
+spec:
+    destination:
+        name: postgres
+    sources:
+      - name: review-handler
+        action: allow
+      - name: search-engine
+        action: allow
+      - name: create-service
+        action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+    name: ai-descriptor
+    namespace: gamebase
+spec:
+    destination:
+        name: ai-descriptor
+    sources:
+        - name: gateway
+          action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+    name: web-frontend
+    namespace: gamebase
+spec:
+    destination:
+        name: web-frontend
+    sources:
+      - name: api-gateway
+        action: allow
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceIntentions
+metadata:
+  name: gateway
+  namespace: gamebase
+spec:
+  destination:
+    name: gateway
+  sources:
+    - name: api-gateway
+      action: allow

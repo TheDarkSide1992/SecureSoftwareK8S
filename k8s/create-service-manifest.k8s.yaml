@@ -5,8 +5,6 @@ metadata:
     app: create-service
   name: create-service
   namespace: gamebase
-  annotations:
-    consul.hashicorp.com/connect-inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 2
@@ -21,6 +19,10 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
+        consul.hashicorp.com/transparent-proxy: "true"
+        consul.hashicorp.com/transparent-proxy-overwrite-upstream-port: "8080"
       labels:
         app: create-service
     spec:
@@ -33,11 +35,20 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           env:
+            - name: pgconn
+              valueFrom:
+                secretKeyRef:
+                  name: gamebase-db-secret
+                  key: pgconn
             - name: CONSUL_ACL
               valueFrom:
                 secretKeyRef:
                   name: consul-acl
                   key: token
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -50,12 +61,10 @@ kind: Service
 metadata:
   name: create-service
   namespace: gamebase
-  annotations:
-    consul.hashicorp.com/connect-inject: "true"
 spec:
   selector:
     app: create-service
   ports:
     - port: 6000
-      targetPort: 6000
+      targetPort: 8080
       name: http

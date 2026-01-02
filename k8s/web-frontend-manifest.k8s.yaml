@@ -5,8 +5,7 @@ metadata:
     app: web-frontend
   name: web-frontend
   namespace: gamebase
-  annotations:
-    consul.hashicorp.com/connect-inject: "true"
+  
 spec:
   progressDeadlineSeconds: 600
   replicas: 4
@@ -21,13 +20,23 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
       labels:
         app: web-frontend
     spec:
+      volumes:
+        - name: config-volume
+          secret:
+            secretName: frontend-config-secret
       serviceAccountName: web-frontend
       containers:
-        - image: ghcr.io/emil476m/gamebase-web:0.0.37
-          imagePullPolicy: IfNotPresent
+        - image: frontend:local
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 4200
+              name: http
+              protocol: TCP
           name: gamebase-web
           resources: {}
           terminationMessagePath: /dev/termination-log
@@ -38,6 +47,11 @@ spec:
                 secretKeyRef:
                   name: consul-acl
                   key: token
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/nginx/html/www/assets/config.json
+              subPath: config.json
+              readOnly: true
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -51,7 +65,7 @@ metadata:
   name: web-frontend
   namespace: gamebase
   annotations:
-    consul.hashicorp.com/connect-inject: "true"
+    consul.hashicorp.com/service-protocol: "http"
 spec:
   selector:
     app: web-frontend
@@ -59,3 +73,11 @@ spec:
     - port: 4200
       targetPort: 4200
       name: http
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: web-frontend
+  namespace: gamebase
+spec:
+  protocol: http

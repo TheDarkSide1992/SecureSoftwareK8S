@@ -50,18 +50,101 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 >```bash
 > kubectl create secret generic postgres-secret -n database   --from-literal=POSTGRES_DB='GameBaseDb'   --from-literal=username='postgres'   --from-literal=password='Your$ecureP@ssw0rd!'
 >```
+>
+>```bash
+> kubectl create secret generic gamebase-db-secret -n gamebase   --from-literal=pgconn='Host=postgres.database.svc.cluster.local;Port=5432;Database=GameBaseDb;Username=postgres;Password=Your$ecureP@ssw0rd!;SSL Mode=Disable;'
+>```
 
+# Set up frontend, gateway and Consul api gateway
+>
+> ```bash
+> docker build -t frontend:local -f ./frontend/Dockerfile .
+> minikube image load frontend:local
+> docker build -t gateway:local -f ./gateway/Dockerfile .
+> minikube image load gateway:local
+> ```
+
+> Extract the certificates from the consul vault
+> 
+> ```bash
+> kubectl cp consul-server-0:vault/secrets/servercert.crt ./consul/gateway.crt -n consul -c consul
+> kubectl cp consul-server-0:vault/secrets/servercert.key ./consul/gateway.key -n consul -c consul
+> ```
+
+> Create a certificate secret for the consul api gateway
+> 
+> ```bash
+> kubectl create secret tls consul-server-cert -n consul --cert=./consul/gateway.crt --key=./consul/gateway.key
+> ```
+
+> Create frontend config secret
+> 
+> ```bash
+> kubectl create secret generic frontend-config-secret --from-file=config.json=./frontend-config/config.json -n gamebase
+> ```
+
+## Observability suite(setup is optional)
+> This is optional, it will allow you to observe the traffic in the service mesh.
+> it uses prometheus and grafana for metrics and visualization along with loki and alloy for logs.
+>
+> Please follow this setup guide for the observability suite [Guide](observability-suite.md)
+
+## Apply service intentions and set up consul api gateway
+
+>[!NOTE]
+> if needed you can update your Kubernetes api gateway CRDs by using this command
+> this installs version v1.2.1 of the gateway api which allows use of gateway.networking.k8s.io/v1
+> ```bash
+> kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
+>```
+
+> Apply consul api gateway
+> 
+> ```bash
+> kubectl apply -f ./consul/consul-gateway.yaml
+> ```
+
+>[!NOTE]
+> 
+> Make sure that you run the following command to allow the Envoy sidecars to communicate with the different services
+> 
+> Apply service intentions
+> 
+> ```bash
+> kubectl apply -f ./consul/intentions.yaml
+> ```
+
+### Create gamebase pods and database pod
 > Create k8s pods
 >
 >```bash
 > kubectl apply -f ./k8s/
 >```
 
+
 > View pods for gamebase and database namespaces
 >
 >```bash
 > kubectl get pods -n gamebase && kubectl get pods -n database
 >```
+
+>[!NOTE]
+> this is a command containing placeholder data for creating the tables needed in the database
+>
+> ```bash
+> kubectl cp ./database-config/create.sql postgres-0:/tmp/init.sql -n database -c postgres
+> kubectl exec -n database postgres-0 -c postgres -- psql -U postgres -d GameBaseDb -f /tmp/init.sql
+> ```
+
+
+>[!NOTE]
+> 
+> If you want to access the frontend you can do so by using the following command
+> remember to use https since the consul api gateway uses tls
+> 
+> ```bash
+> minikube service api-gateway -n consul --url
+> ```
 
 > View all resources for gamebase and database namespaces(remove the -o wide flag for less details)
 >

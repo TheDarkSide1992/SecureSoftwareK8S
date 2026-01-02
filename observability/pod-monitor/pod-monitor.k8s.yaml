@@ -1,0 +1,19 @@
+﻿apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: consul-mesh-autodiscovery
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+
+  selector:
+    matchLabels:
+      consul.hashicorp.com/connect-inject-status: "injected"
+  namespaceSelector:
+    any: true
+  podMetricsEndpoints:
+    - port: prometheus
+      targetPort: 20200
+      path: /metrics
+      interval: 15s

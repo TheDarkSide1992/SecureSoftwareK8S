@@ -5,8 +5,6 @@ metadata:
     app: ai-descriptor
   name: ai-descriptor
   namespace: gamebase
-  annotations:
-    consul.hashicorp.com/connect-inject: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 2
@@ -21,6 +19,10 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: "true"
+        consul.hashicorp.com/transparent-proxy: "true"
+        consul.hashicorp.com/transparent-proxy-overwrite-upstream-port: "8080"
       labels:
         app: ai-descriptor
     spec:
@@ -38,6 +40,10 @@ spec:
                 secretKeyRef:
                   name: consul-acl
                   key: token
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -50,12 +56,10 @@ kind: Service
 metadata:
   name: ai-descriptor
   namespace: gamebase
-  annotations:
-    consul.hashicorp.com/connect-inject: "true"
 spec:
   selector:
     app: ai-descriptor
   ports:
     - port: 5000
-      targetPort: 5000
+      targetPort: 8080
       name: http

@@ -277,7 +277,7 @@ With the pods running in the vault name space
 > Set up consul pods
 > 
 > ```bash
-> helm install --values ./consul/helm-values/consul-datacenter-values.yaml consul hashicorp/consul --namespace consul --version "1.9.0"
+> helm install --values ./consul/helm-values/consul-datacenter-values.yaml consul hashicorp/consul --namespace consul --version "1.9.2"
 > ```
 
 ## Access the consul ui
@@ -289,8 +289,8 @@ With the pods running in the vault name space
 > Port froward consul
 > 
 > ```bash
-> kubectl port-forward -n consul consul-server-0 8500:8500
+> kubectl port-forward -n consul consul-server-0 8501:8501
 > ```
 
 you can find the ui at
-> http://localhost:8500/ui/dc1/services
+> https://localhost:8501/ui/
