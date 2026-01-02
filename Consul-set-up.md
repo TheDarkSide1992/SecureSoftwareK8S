@@ -277,7 +277,7 @@ With the pods running in the vault name space
 > Set up consul pods
 > 
 > ```bash
-> helm install --values ./consul/helm-values/consul-datacenter-values.yaml consul hashicorp/consul --namespace consul --version "1.9.2"
+> helm install --values ./consul/helm-values/consul-datacenter-values.yaml consul hashicorp/consul --namespace consul --version "1.9.1"
 > ```
 
 ## Access the consul ui
