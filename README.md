@@ -158,6 +158,12 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 > kubectl get pods --all-namespaces -o wide
 >```
 
+> To see the page use the following command, make sure to use http on the shown url
+> ```
+> minikube service api-gateway -n consul --url
+>```
+ 
+
 > If you want to confirm encryption at rest is working for secrets you can use the following command and search for GameBaseDb then you will see the value for key1 is encrypted
 >
 >```bash
