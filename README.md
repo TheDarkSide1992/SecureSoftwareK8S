@@ -156,7 +156,7 @@ Please set up consul first here is a guide for it: [Guide](Consul-set-up.md)
 >
 >```bash
 > kubectl get pods --all-namespaces -o wide
->```
+>``` 
 
 > If you want to confirm encryption at rest is working for secrets you can use the following command and search for GameBaseDb then you will see the value for key1 is encrypted
 >
